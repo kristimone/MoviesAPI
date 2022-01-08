@@ -1,4 +1,8 @@
-﻿namespace MoviesAPI
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.OpenApi.Models;
+using MoviesAPI.Filters;
+
+namespace MoviesAPI
 {
     public class Startup
     {
@@ -10,14 +14,18 @@
         public IConfiguration Configuration { get; }
         public void ConfigureServices(IServiceCollection services)
         {
-
-            services.AddControllers();
+            services.AddControllers(options =>
+            {
+                options.Filters.Add(typeof(MyExceptionFilter));
+            });
+            services.AddResponseCaching();
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new() { Title = "MoviesAPI", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "MoviesAPI", Version = "v1" });
             });
         }
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env )
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger )
         {
             if (env.IsDevelopment())
             {
@@ -29,6 +37,8 @@
             app.UseHttpsRedirection();
 
             app.UseRouting();
+
+            app.UseAuthentication();
 
             app.UseAuthorization();
 
